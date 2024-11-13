@@ -80,6 +80,9 @@ def prepare_features(df):
         
         features.append(product_data)
     
+    # Consider a product as "not sold" if quantity is below a threshold
+    df['will_sell'] = (df['daily_quantity'] > df['daily_quantity'].median()).astype(int)
+    
     return pd.concat(features).dropna()
 
 def train_models(df):
@@ -92,8 +95,9 @@ def train_models(df):
         'days_since_last_sale'
     ]
     
-    # Prepare classification data (will product be sold or not)
-    df['will_sell'] = (df['daily_quantity'] > 0).astype(int)
+    # Instead of binary sold/not sold, use a threshold approach
+    median_sales = df['daily_quantity'].median()
+    df['will_sell'] = (df['daily_quantity'] > median_sales).astype(int)
     
     # Split data
     X = df[feature_columns]
@@ -123,13 +127,48 @@ def train_models(df):
     conf_matrix = confusion_matrix(y_class_test, y_class_pred)
     
     # Create classification performance visualization
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
-    plt.title('Confusion Matrix')
-    plt.ylabel('True Label')
-    plt.xlabel('Predicted Label')
+    plt.figure(figsize=(20, 15))
+    top_products = df['stockcode'].value_counts().head(10).index
+    
+    for idx, stockcode in enumerate(top_products, 1):
+        # Filter data for this product
+        product_mask = df['stockcode'] == stockcode
+        product_X = X[product_mask]
+        product_y = y_class[product_mask]
+        
+        # Get predictions for this product
+        product_pred = clf.predict(product_X)
+        
+        # Create confusion matrix for this product with explicit labels
+        plt.subplot(3, 4, idx)
+        try:
+            conf_matrix = confusion_matrix(product_y, product_pred, labels=[0, 1])
+            
+            # Plot confusion matrix with improved labels and formatting
+            sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues',
+                       xticklabels=['Will Not\nSell', 'Will\nSell'],
+                       yticklabels=['Will Not\nSell', 'Will\nSell'])
+            
+            # Add title with product code and truncated description
+            product_desc = df[product_mask]['description'].iloc[0][:30] + '...'
+            plt.title(f'Product {stockcode}\n{product_desc}', pad=10)
+            
+            # Print additional info for debugging
+            print(f"\nProduct {stockcode}:")
+            print(f"Unique actual values: {np.unique(product_y)}")
+            print(f"Unique predicted values: {np.unique(product_pred)}")
+            print(f"Total samples: {len(product_y)}")
+            
+        except Exception as e:
+            print(f"Error creating confusion matrix for product {stockcode}: {e}")
+            continue
+        
+        plt.ylabel('Actual')
+        plt.xlabel('Predicted')
+
+    plt.suptitle('Confusion Matrices for Top 10 Products', fontsize=16, y=1.02)
     plt.tight_layout()
-    plt.savefig('product_forecast/confusion_matrix.png')
+    plt.savefig('product_forecast/confusion_matrix.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Regression metrics
