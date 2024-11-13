@@ -1,6 +1,8 @@
 #Ignore File
 train.csv 
 product_prediction_models.pkl
+outputs/
+product_forecast/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

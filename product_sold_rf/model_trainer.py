@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.metrics import classification_report, mean_absolute_error
+from sklearn.metrics import classification_report, mean_absolute_error, confusion_matrix, precision_recall_fscore_support, r2_score
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -117,9 +117,52 @@ def train_models(df):
     y_class_pred = clf.predict(X_test)
     print(classification_report(y_class_test, y_class_pred))
     
+    # Add performance matrix visualization
+    # Classification metrics
+    precision, recall, f1, _ = precision_recall_fscore_support(y_class_test, y_class_pred, average='binary')
+    conf_matrix = confusion_matrix(y_class_test, y_class_pred)
+    
+    # Create classification performance visualization
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
+    plt.title('Confusion Matrix')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.tight_layout()
+    plt.savefig('product_forecast/confusion_matrix.png')
+    plt.close()
+    
+    # Regression metrics
     print("\nRegression Model Performance:")
     y_reg_pred = reg.predict(X_test)
-    print(f"Mean Absolute Error: {mean_absolute_error(y_reg_test, y_reg_pred):.2f}")
+    mae = mean_absolute_error(y_reg_test, y_reg_pred)
+    r2 = r2_score(y_reg_test, y_reg_pred)
+    mse = np.mean((y_reg_test - y_reg_pred) ** 2)
+    rmse = np.sqrt(mse)
+    
+    print(f"Mean Absolute Error: {mae:.2f}")
+    print(f"Root Mean Squared Error: {rmse:.2f}")
+    print(f"R² Score: {r2:.2f}")
+    
+    # Create regression performance scatter plot
+    plt.figure(figsize=(10, 6))
+    plt.scatter(y_reg_test, y_reg_pred, alpha=0.5)
+    plt.plot([y_reg_test.min(), y_reg_test.max()], [y_reg_test.min(), y_reg_test.max()], 'r--', lw=2)
+    plt.xlabel('Actual Quantities')
+    plt.ylabel('Predicted Quantities')
+    plt.title('Actual vs Predicted Quantities')
+    plt.tight_layout()
+    plt.savefig('product_forecast/regression_performance.png')
+    plt.close()
+    
+    # Save performance metrics to CSV
+    performance_metrics = pd.DataFrame({
+        'Metric': ['Precision', 'Recall', 'F1 Score', 
+                  'MAE', 'RMSE', 'R² Score'],
+        'Value': [precision, recall, f1, 
+                 mae, rmse, r2]
+    })
+    performance_metrics.to_csv('product_forecast/model_performance_metrics.csv', index=False)
     
     return clf, reg, feature_columns
 
