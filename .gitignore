@@ -1,8 +1,23 @@
 #Ignore File
 train.csv 
-product_prediction_models.pkl
 outputs/
 product_forecast/
+customer_segmentation/
+clusterSegmentation/
+old/
+radomForest/
+sales_forecast/
+product_sold_forecast/
+figures/
+product_sold_rf/
+
+
+# Ignore Model Files
+product_prediction_models.pkl
+sales_prediction_models.pkl
+sales_forecast_rf.pkl
+customer_segmentation_models.pkl
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
