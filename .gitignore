@@ -18,6 +18,8 @@ sales_prediction_models.pkl
 sales_forecast_rf.pkl
 customer_segmentation_models.pkl
 
+=======
+>>>>>>> 6b0018b71e9197f9d5ef74e20a8de4e87ae4b6ca
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
