@@ -3,6 +3,11 @@ train.csv
 product_prediction_models.pkl
 outputs/
 product_forecast/
+customer_segmentation/
+clusterSegmentation/
+old/
+radomForest/
+sales_forecast/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
